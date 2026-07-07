@@ -220,3 +220,14 @@ __marimo__/
 # DocSensei local storage
 uploads/
 vector_db/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE settings
+.vscode/
+.idea/
+
+# Local database (if you use SQLite later)
+*.db

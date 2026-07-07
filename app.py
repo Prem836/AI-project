@@ -1,5 +1,7 @@
 import streamlit as st
 import os
+from utils.loader import load_document
+from utils.helpers import get_document_metrics, time_it
 
 # Set page configuration with premium tab title and layout
 st.set_page_config(
@@ -97,6 +99,40 @@ st.markdown("""
         background: rgba(148, 163, 184, 0.1);
         color: #94a3b8;
     }
+    
+    /* Stats box design for document metrics */
+    .stat-container {
+        display: flex;
+        justify-content: space-between;
+        gap: 0.8rem;
+        margin-top: 1rem;
+        margin-bottom: 1rem;
+    }
+    .stat-box {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 12px;
+        padding: 0.8rem;
+        text-align: center;
+        transition: transform 0.2s ease, border-color 0.2s ease;
+    }
+    .stat-box:hover {
+        transform: translateY(-2px);
+        border-color: rgba(167, 139, 250, 0.3);
+    }
+    .stat-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #a78bfa;
+        margin-bottom: 0.2rem;
+    }
+    .stat-label {
+        font-size: 0.7rem;
+        color: #94a3b8;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -119,11 +155,10 @@ with st.sidebar:
     
     st.subheader("📅 Project Roadmap & Status")
     
-    # Progress status indicators
     st.markdown("""
     * **Day 1: Base UI Setup** <span class='status-badge status-completed'>Completed</span>
-    * **Day 2: Doc Loading & Text Extraction** <span class='status-badge status-pending'>In Progress</span>
-    * **Day 3: Text Chunking** <span class='status-badge status-upcoming'>Upcoming</span>
+    * **Day 2: Doc Loading & Text Extraction** <span class='status-badge status-completed'>Completed</span>
+    * **Day 3: Text Chunking** <span class='status-badge status-pending'>In Progress</span>
     * **Day 4: Embeddings & Vector Store** <span class='status-badge status-upcoming'>Upcoming</span>
     * **Day 5: Gemini LLM Integration** <span class='status-badge status-upcoming'>Upcoming</span>
     * **Day 6: Chat History Interface** <span class='status-badge status-upcoming'>Upcoming</span>
@@ -161,31 +196,160 @@ with col1:
         key="doc_uploader"
     )
     
+    if "processed_files" not in st.session_state:
+        st.session_state.processed_files = {}
+
     if uploaded_files:
-        st.success(f"📁 {len(uploaded_files)} file(s) uploaded successfully!")
+        # Identify removed files
+        current_uploaded_names = [f.name for f in uploaded_files]
+        for name in list(st.session_state.processed_files.keys()):
+            if name not in current_uploaded_names:
+                del st.session_state.processed_files[name]
+                
+        # Identify files that need to be processed
+        new_files_to_process = [f for f in uploaded_files if f.name not in st.session_state.processed_files]
         
-        # Display uploaded file names and sizes
-        for f in uploaded_files:
-            file_details = {"FileName": f.name, "FileType": f.type, "FileSize": f.size}
-            st.code(f"📄 Name: {f.name}\n⚖️ Size: {f.size / 1024:.2f} KB")
+        if new_files_to_process:
+            os.makedirs("uploads", exist_ok=True)
+            with st.spinner("🔍 Extracting text from documents..."):
+                for f in new_files_to_process:
+                    file_path = os.path.join("uploads", f.name)
+                    try:
+                        # Write file content
+                        with open(file_path, "wb") as temp_file:
+                            temp_file.write(f.getbuffer())
+                        # Load and extract text
+                        with time_it() as timer:
+                            docs = load_document(file_path)
+                        st.session_state.processed_files[f.name] = {
+                            "docs": docs,
+                            "time_taken": timer.elapsed,
+                            "size": f.size
+                        }
+                    except Exception as e:
+                        st.error(f"❌ Error processing {f.name}: {str(e)}")
+
+        # Collect all successfully loaded documents
+        all_documents = []
+        for name, data in st.session_state.processed_files.items():
+            all_documents.extend(data["docs"])
             
-        st.info("ℹ️ Next step: Processing text extraction (Day 2 task!)")
+        if all_documents:
+            st.success(f"📁 {len(uploaded_files)} file(s) loaded and processed successfully!")
+        else:
+            st.warning("⚠️ No documents could be successfully processed.")
     else:
-        st.warning("⚠️ No documents uploaded yet. Please upload files to get started.")
-        
+        if not st.session_state.processed_files:
+            st.warning("⚠️ No documents uploaded yet. Please upload files to get started.")
+        else:
+            st.success(f"📁 {len(st.session_state.processed_files)} file(s) loaded successfully!")
+
+    # Developer Quick-Load / Reset buttons at the bottom of the Upload card
+    if os.path.exists("test_files"):
+        test_files = [f for f in os.listdir("test_files") if f.endswith((".pdf", ".docx"))]
+        if test_files:
+            st.markdown("---")
+            st.markdown("<p style='color: #94a3b8; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem;'>💡 Developer Quick-Load</p>", unsafe_allow_html=True)
+            col_dev1, col_dev2 = st.columns(2)
+            with col_dev1:
+                if st.button("📁 Load Test Files", use_container_width=True):
+                    for fname in test_files:
+                        file_path = os.path.join("test_files", fname)
+                        if fname not in st.session_state.processed_files:
+                            try:
+                                with time_it() as timer:
+                                    docs = load_document(file_path)
+                                # Copy to uploads directory to mimic standard upload behavior
+                                os.makedirs("uploads", exist_ok=True)
+                                dest_path = os.path.join("uploads", fname)
+                                import shutil
+                                shutil.copy2(file_path, dest_path)
+                                
+                                st.session_state.processed_files[fname] = {
+                                    "docs": docs,
+                                    "time_taken": timer.elapsed,
+                                    "size": os.path.getsize(file_path)
+                                }
+                            except Exception as e:
+                                st.error(f"❌ Error loading test file {fname}: {str(e)}")
+                    st.rerun()
+            with col_dev2:
+                if st.button("🗑️ Clear Cache", use_container_width=True):
+                    st.session_state.processed_files.clear()
+                    st.rerun()
+
     st.markdown("</div>", unsafe_allow_html=True)
+    
+    # Show stats and previewer as separate cards outside the Upload card but within col1
+    if st.session_state.processed_files:
+        # Collect all loaded docs
+        all_documents = []
+        for name, data in st.session_state.processed_files.items():
+            all_documents.extend(data["docs"])
+            
+        if all_documents:
+            # Metrics Card
+            st.markdown("<div class='card'>", unsafe_allow_html=True)
+            st.subheader("📊 Extraction Metrics")
+            metrics = get_document_metrics(all_documents)
+            st.markdown(f"""
+            <div class="stat-container">
+                <div class="stat-box">
+                    <div class="stat-number">{metrics['doc_count']}</div>
+                    <div class="stat-label">Documents</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">{metrics['page_count']}</div>
+                    <div class="stat-label">Total Pages</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-number">{metrics['total_chars']:,}</div>
+                    <div class="stat-label">Characters</div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # File list detail
+            for name, data in st.session_state.processed_files.items():
+                st.markdown(f"<div style='margin-bottom: 0.5rem;'><span style='color: #a78bfa; font-weight: 500;'>📄 {name}</span> <span style='color: #64748b; font-size: 0.85rem;'>({data['size'] / 1024:.1f} KB) &bull; Extracted in {data['time_taken']:.2f}s</span></div>", unsafe_allow_html=True)
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            # Text Previewer Card
+            st.markdown("<div class='card'>", unsafe_allow_html=True)
+            st.subheader("🔍 Text Previewer")
+            selected_file = st.selectbox(
+                "Choose a document to inspect:",
+                options=list(st.session_state.processed_files.keys()),
+                key="doc_previewer_select"
+            )
+            if selected_file:
+                file_data = st.session_state.processed_files[selected_file]
+                full_text = file_data["docs"][0]["text"]
+                preview_len = min(1000, len(full_text))
+                preview_text = full_text[:preview_len]
+                if len(full_text) > 1000:
+                    preview_text += "\n\n... [Truncated: Showing first 1000 characters] ..."
+                st.text_area(
+                    f"Content Preview ({preview_len:,} / {len(full_text):,} chars):",
+                    value=preview_text,
+                    height=200,
+                    disabled=True,
+                    key="doc_previewer_area"
+                )
+            st.markdown("</div>", unsafe_allow_html=True)
+
 
 with col2:
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("💬 Interactive Assistant")
     
-    # Placeholder layout for Day 1
-    if not uploaded_files:
+    # Placeholder layout for Day 1 & Day 2
+    if not st.session_state.processed_files:
         st.markdown("""
         <div style="text-align: center; padding: 3rem 1rem; color: #64748b;">
             <p style="font-size: 4rem; margin-bottom: 1rem;">📚</p>
             <h3>Knowledge Database Empty</h3>
-            <p>Upload documents in the left panel to allow the assistant to read and answer questions from them.</p>
+            <p>Upload documents in the left panel or load test files to allow the assistant to read and answer questions from them.</p>
         </div>
         """, unsafe_allow_html=True)
     else:
