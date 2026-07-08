@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 from utils.loader import load_document
+from utils.splitter import split_text
 from utils.helpers import get_document_metrics, time_it
 
 # Set page configuration with premium tab title and layout
@@ -158,8 +159,8 @@ with st.sidebar:
     st.markdown("""
     * **Day 1: Base UI Setup** <span class='status-badge status-completed'>Completed</span>
     * **Day 2: Doc Loading & Text Extraction** <span class='status-badge status-completed'>Completed</span>
-    * **Day 3: Text Chunking** <span class='status-badge status-pending'>In Progress</span>
-    * **Day 4: Embeddings & Vector Store** <span class='status-badge status-upcoming'>Upcoming</span>
+    * **Day 3: Text Chunking** <span class='status-badge status-completed'>Completed</span>
+    * **Day 4: Embeddings & Vector Store** <span class='status-badge status-pending'>In Progress</span>
     * **Day 5: Gemini LLM Integration** <span class='status-badge status-upcoming'>Upcoming</span>
     * **Day 6: Chat History Interface** <span class='status-badge status-upcoming'>Upcoming</span>
     * **Day 7: Document Summarization** <span class='status-badge status-upcoming'>Upcoming</span>
@@ -218,14 +219,16 @@ with col1:
                         # Write file content
                         with open(file_path, "wb") as temp_file:
                             temp_file.write(f.getbuffer())
-                        # Load and extract text
-                        with time_it() as timer:
-                            docs = load_document(file_path)
-                        st.session_state.processed_files[f.name] = {
-                            "docs": docs,
-                            "time_taken": timer.elapsed,
-                            "size": f.size
-                        }
+                            # Load, extract text and split into chunks
+                            with time_it() as timer:
+                                docs = load_document(file_path)
+                                chunks = split_text(docs)
+                            st.session_state.processed_files[f.name] = {
+                                "docs": docs,
+                                "chunks": chunks,
+                                "time_taken": timer.elapsed,
+                                "size": f.size
+                            }
                     except Exception as e:
                         st.error(f"❌ Error processing {f.name}: {str(e)}")
 
@@ -259,6 +262,7 @@ with col1:
                             try:
                                 with time_it() as timer:
                                     docs = load_document(file_path)
+                                    chunks = split_text(docs)
                                 # Copy to uploads directory to mimic standard upload behavior
                                 os.makedirs("uploads", exist_ok=True)
                                 dest_path = os.path.join("uploads", fname)
@@ -267,6 +271,7 @@ with col1:
                                 
                                 st.session_state.processed_files[fname] = {
                                     "docs": docs,
+                                    "chunks": chunks,
                                     "time_taken": timer.elapsed,
                                     "size": os.path.getsize(file_path)
                                 }
@@ -290,8 +295,11 @@ with col1:
         if all_documents:
             # Metrics Card
             st.markdown("<div class='card'>", unsafe_allow_html=True)
-            st.subheader("📊 Extraction Metrics")
+            st.subheader("📊 Extraction & Chunking Metrics")
             metrics = get_document_metrics(all_documents)
+            total_chunks = sum(len(data.get("chunks", [])) for data in st.session_state.processed_files.values())
+            avg_chunk_size = metrics['total_chars'] / total_chunks if total_chunks > 0 else 0
+            
             st.markdown(f"""
             <div class="stat-container">
                 <div class="stat-box">
@@ -303,15 +311,21 @@ with col1:
                     <div class="stat-label">Total Pages</div>
                 </div>
                 <div class="stat-box">
+                    <div class="stat-number">{total_chunks}</div>
+                    <div class="stat-label">Total Chunks</div>
+                </div>
+                <div class="stat-box">
                     <div class="stat-number">{metrics['total_chars']:,}</div>
                     <div class="stat-label">Characters</div>
                 </div>
             </div>
             """, unsafe_allow_html=True)
+            st.markdown(f"<div style='font-size: 0.85rem; color: #94a3b8; text-align: center; margin-bottom: 1rem;'>💡 Average Chunk Size: <strong>{avg_chunk_size:.1f}</strong> characters &bull; Target Chunk Size: <strong>1000</strong> &bull; Overlap: <strong>200</strong></div>", unsafe_allow_html=True)
             
             # File list detail
             for name, data in st.session_state.processed_files.items():
-                st.markdown(f"<div style='margin-bottom: 0.5rem;'><span style='color: #a78bfa; font-weight: 500;'>📄 {name}</span> <span style='color: #64748b; font-size: 0.85rem;'>({data['size'] / 1024:.1f} KB) &bull; Extracted in {data['time_taken']:.2f}s</span></div>", unsafe_allow_html=True)
+                chunks_count = len(data.get("chunks", []))
+                st.markdown(f"<div style='margin-bottom: 0.5rem;'><span style='color: #a78bfa; font-weight: 500;'>📄 {name}</span> <span style='color: #64748b; font-size: 0.85rem;'>({data['size'] / 1024:.1f} KB) &bull; {chunks_count} chunks generated in {data['time_taken']:.2f}s</span></div>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
             
             # Text Previewer Card
