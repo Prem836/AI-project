@@ -2,7 +2,30 @@ import streamlit as st
 import os
 from utils.loader import load_document
 from utils.splitter import split_text
+from utils.embeddings import get_embeddings_model
+from utils.vectorstore import create_vector_store
 from utils.helpers import get_document_metrics, time_it
+
+# Helper to update vector store
+def update_vector_store():
+    """
+    Rebuilds or clears the FAISS vector store based on current processed files.
+    """
+    all_chunks = []
+    for name, data in st.session_state.processed_files.items():
+        all_chunks.extend(data["chunks"])
+        
+    if all_chunks:
+        try:
+            embeddings_model = get_embeddings_model()
+            st.session_state.vector_store = create_vector_store(all_chunks, embeddings_model)
+        except Exception as e:
+            st.error(f"❌ Error building vector store: {str(e)}")
+    else:
+        st.session_state.vector_store = None
+        import shutil
+        if os.path.exists("vector_db"):
+            shutil.rmtree("vector_db", ignore_errors=True)
 
 # Set page configuration with premium tab title and layout
 st.set_page_config(
@@ -160,8 +183,8 @@ with st.sidebar:
     * **Day 1: Base UI Setup** <span class='status-badge status-completed'>Completed</span>
     * **Day 2: Doc Loading & Text Extraction** <span class='status-badge status-completed'>Completed</span>
     * **Day 3: Text Chunking** <span class='status-badge status-completed'>Completed</span>
-    * **Day 4: Embeddings & Vector Store** <span class='status-badge status-pending'>In Progress</span>
-    * **Day 5: Gemini LLM Integration** <span class='status-badge status-upcoming'>Upcoming</span>
+    * **Day 4: Embeddings & Vector Store** <span class='status-badge status-completed'>Completed</span>
+    * **Day 5: Gemini LLM Integration** <span class='status-badge status-pending'>In Progress</span>
     * **Day 6: Chat History Interface** <span class='status-badge status-upcoming'>Upcoming</span>
     * **Day 7: Document Summarization** <span class='status-badge status-upcoming'>Upcoming</span>
     * **Day 8: Styling & Custom CSS** <span class='status-badge status-upcoming'>Upcoming</span>
@@ -201,11 +224,14 @@ with col1:
         st.session_state.processed_files = {}
 
     if uploaded_files:
+        st.session_state.last_action = "upload"
         # Identify removed files
         current_uploaded_names = [f.name for f in uploaded_files]
+        removed_any = False
         for name in list(st.session_state.processed_files.keys()):
             if name not in current_uploaded_names:
                 del st.session_state.processed_files[name]
+                removed_any = True
                 
         # Identify files that need to be processed
         new_files_to_process = [f for f in uploaded_files if f.name not in st.session_state.processed_files]
@@ -231,6 +257,11 @@ with col1:
                             }
                     except Exception as e:
                         st.error(f"❌ Error processing {f.name}: {str(e)}")
+            with st.spinner("🧠 Generating embeddings & building FAISS index..."):
+                update_vector_store()
+        elif removed_any:
+            with st.spinner("🧠 Rebuilding FAISS index..."):
+                update_vector_store()
 
         # Collect all successfully loaded documents
         all_documents = []
@@ -238,14 +269,21 @@ with col1:
             all_documents.extend(data["docs"])
             
         if all_documents:
-            st.success(f"📁 {len(uploaded_files)} file(s) loaded and processed successfully!")
+            st.success(f"📁 {len(uploaded_files)} file(s) loaded, chunked, and indexed in FAISS!")
         else:
             st.warning("⚠️ No documents could be successfully processed.")
     else:
+        # Sync: if uploader is empty but we had uploader files, clear them
+        if "last_action" in st.session_state and st.session_state.last_action == "upload":
+            if st.session_state.processed_files:
+                st.session_state.processed_files.clear()
+                update_vector_store()
+                st.warning("⚠️ Cache cleared: uploader emptied.")
+                
         if not st.session_state.processed_files:
             st.warning("⚠️ No documents uploaded yet. Please upload files to get started.")
         else:
-            st.success(f"📁 {len(st.session_state.processed_files)} file(s) loaded successfully!")
+            st.success(f"📁 {len(st.session_state.processed_files)} file(s) loaded, chunked, and indexed in FAISS!")
 
     # Developer Quick-Load / Reset buttons at the bottom of the Upload card
     if os.path.exists("test_files"):
@@ -256,6 +294,8 @@ with col1:
             col_dev1, col_dev2 = st.columns(2)
             with col_dev1:
                 if st.button("📁 Load Test Files", use_container_width=True):
+                    st.session_state.last_action = "dev_load"
+                    loaded_any = False
                     for fname in test_files:
                         file_path = os.path.join("test_files", fname)
                         if fname not in st.session_state.processed_files:
@@ -275,12 +315,19 @@ with col1:
                                     "time_taken": timer.elapsed,
                                     "size": os.path.getsize(file_path)
                                 }
+                                loaded_any = True
                             except Exception as e:
                                 st.error(f"❌ Error loading test file {fname}: {str(e)}")
+                    if loaded_any:
+                        with st.spinner("🧠 Generating embeddings & building FAISS index..."):
+                            update_vector_store()
                     st.rerun()
             with col_dev2:
                 if st.button("🗑️ Clear Cache", use_container_width=True):
                     st.session_state.processed_files.clear()
+                    if "last_action" in st.session_state:
+                        del st.session_state.last_action
+                    update_vector_store()
                     st.rerun()
 
     st.markdown("</div>", unsafe_allow_html=True)
