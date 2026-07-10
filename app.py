@@ -4,6 +4,7 @@ from utils.loader import load_document
 from utils.splitter import split_text
 from utils.embeddings import get_embeddings_model
 from utils.vectorstore import create_vector_store
+from utils.chatbot import query_chatbot
 from utils.helpers import get_document_metrics, time_it
 
 # Helper to update vector store
@@ -184,8 +185,8 @@ with st.sidebar:
     * **Day 2: Doc Loading & Text Extraction** <span class='status-badge status-completed'>Completed</span>
     * **Day 3: Text Chunking** <span class='status-badge status-completed'>Completed</span>
     * **Day 4: Embeddings & Vector Store** <span class='status-badge status-completed'>Completed</span>
-    * **Day 5: Gemini LLM Integration** <span class='status-badge status-pending'>In Progress</span>
-    * **Day 6: Chat History Interface** <span class='status-badge status-upcoming'>Upcoming</span>
+    * **Day 5: Gemini LLM Integration** <span class='status-badge status-completed'>Completed</span>
+    * **Day 6: Chat History Interface** <span class='status-badge status-pending'>In Progress</span>
     * **Day 7: Document Summarization** <span class='status-badge status-upcoming'>Upcoming</span>
     * **Day 8: Styling & Custom CSS** <span class='status-badge status-upcoming'>Upcoming</span>
     * **Day 9: End-to-End Verification** <span class='status-badge status-upcoming'>Upcoming</span>
@@ -222,6 +223,14 @@ with col1:
     
     if "processed_files" not in st.session_state:
         st.session_state.processed_files = {}
+    if "last_answer" not in st.session_state:
+        st.session_state.last_answer = None
+    if "last_sources" not in st.session_state:
+        st.session_state.last_sources = []
+    if "last_latency" not in st.session_state:
+        st.session_state.last_latency = 0.0
+    if "last_query" not in st.session_state:
+        st.session_state.last_query = ""
 
     if uploaded_files:
         st.session_state.last_action = "upload"
@@ -325,6 +334,10 @@ with col1:
             with col_dev2:
                 if st.button("🗑️ Clear Cache", use_container_width=True):
                     st.session_state.processed_files.clear()
+                    st.session_state.last_answer = None
+                    st.session_state.last_sources = []
+                    st.session_state.last_latency = 0.0
+                    st.session_state.last_query = ""
                     if "last_action" in st.session_state:
                         del st.session_state.last_action
                     update_vector_store()
@@ -415,9 +428,49 @@ with col2:
         """, unsafe_allow_html=True)
     else:
         st.write("Ask a question about your uploaded document(s):")
-        user_query = st.text_input("Ask a question...", placeholder="e.g. What is the main thesis of this document?", disabled=True)
-        st.button("Send Query", disabled=True)
-        st.info("💡 Note: Question answering will be fully functional on Day 5 after integrating Google Gemini!")
+        # Define a form so pressing enter submits it
+        with st.form(key="qa_form", clear_on_submit=False):
+            user_query = st.text_input("Ask a question:", placeholder="e.g. What are the key points discussed?", value=st.session_state.last_query)
+            submit_button = st.form_submit_button(label="🚀 Send Query")
+            
+            if submit_button and user_query.strip():
+                st.session_state.last_query = user_query
+                with st.spinner("🤔 DocSensei is thinking..."):
+                    with time_it() as timer:
+                        res = query_chatbot(user_query, st.session_state.vector_store)
+                    st.session_state.last_answer = res["answer"]
+                    st.session_state.last_sources = res["source_documents"]
+                    st.session_state.last_latency = timer.elapsed
+                st.rerun()
+                
+        if st.session_state.last_answer is not None:
+            st.markdown(f"<p style='color: #64748b; font-size: 0.85rem;'>⚡ Response generated in {st.session_state.last_latency:.2f}s</p>", unsafe_allow_html=True)
+            
+            # Display answer in a styled box
+            st.markdown(f"""
+            <div style='background: rgba(167, 139, 250, 0.05); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(167, 139, 250, 0.15); margin-bottom: 1.5rem;'>
+                <h4 style='color: #a78bfa; margin-top: 0; margin-bottom: 0.8rem;'>🤖 DocSensei's Response</h4>
+                <div style='color: #f0f2f6; font-size: 1rem; line-height: 1.6;'>
+                    {st.session_state.last_answer}
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Display citations
+            if st.session_state.last_sources:
+                st.markdown("<h5 style='color: #94a3b8; font-weight: 600; margin-bottom: 0.5rem;'>📖 Source Citations</h5>", unsafe_allow_html=True)
+                for idx, doc in enumerate(st.session_state.last_sources):
+                    source_name = os.path.basename(doc.metadata.get("source", "unknown"))
+                    page_num = doc.metadata.get("page", "unknown")
+                    st.markdown(f"""
+                    <div style='background: rgba(255, 255, 255, 0.02); padding: 0.8rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 0.5rem;'>
+                        <span style='color: #ec4899; font-weight: 600;'>[Citation {idx+1}]</span> 
+                        <span style='color: #f0f2f6;'>{source_name} &bull; Page {page_num}</span>
+                        <p style='color: #94a3b8; font-size: 0.85rem; margin-top: 0.3rem; margin-bottom: 0; font-style: italic;'>
+                            "... {doc.page_content[:180].strip()} ..."
+                        </p>
+                    </div>
+                    """, unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
     # Document details card
