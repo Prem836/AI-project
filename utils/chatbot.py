@@ -6,20 +6,23 @@ from langchain_core.messages import HumanMessage
 # Load environment variables in case this module is imported standalone
 dotenv.load_dotenv()
 
-SYSTEM_PROMPT = """You are DocSensei, a helpful AI assistant. Answer the user's question using ONLY the provided context from uploaded documents. 
+SYSTEM_PROMPT = """You are DocSensei, a helpful AI assistant. Answer the user's question using ONLY the provided context from uploaded documents and the chat history. 
 If the context does not contain the answer, politely state that you do not know the answer based on the uploaded documents. Do not make up information or answer from external knowledge.
 
 Context:
 {context}
 
+Chat History:
+{chat_history}
+
 Question:
 {question}
 """
 
-def query_chatbot(question: str, vector_store, k: int = 4):
+def query_chatbot(question: str, vector_store, chat_history=None, k: int = 4):
     """
     Retrieves relevant text chunks from the vector store and queries Google Gemini API
-    to perform question answering.
+    to perform question answering, incorporating conversation history.
     Returns:
         dict: {"answer": str, "source_documents": list}
     """
@@ -40,8 +43,15 @@ def query_chatbot(question: str, vector_store, k: int = 4):
             page = doc.metadata.get("page", "unknown")
             context_text += f"\n--- Source: {source}, Page: {page} ---\n{doc.page_content}\n"
             
+        # Format chat history text (last 6 turns)
+        history_text = ""
+        if chat_history:
+            for msg in chat_history[-6:]:
+                role = "User" if msg["role"] == "user" else "DocSensei"
+                history_text += f"{role}: {msg['content']}\n"
+                
         # Format prompt and invoke model
-        prompt = SYSTEM_PROMPT.format(context=context_text, question=question)
+        prompt = SYSTEM_PROMPT.format(context=context_text, chat_history=history_text, question=question)
         
         # Initialize Gemini LLM
         llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.3)

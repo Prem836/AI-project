@@ -186,8 +186,8 @@ with st.sidebar:
     * **Day 3: Text Chunking** <span class='status-badge status-completed'>Completed</span>
     * **Day 4: Embeddings & Vector Store** <span class='status-badge status-completed'>Completed</span>
     * **Day 5: Gemini LLM Integration** <span class='status-badge status-completed'>Completed</span>
-    * **Day 6: Chat History Interface** <span class='status-badge status-pending'>In Progress</span>
-    * **Day 7: Document Summarization** <span class='status-badge status-upcoming'>Upcoming</span>
+    * **Day 6: Chat History Interface** <span class='status-badge status-completed'>Completed</span>
+    * **Day 7: Document Summarization** <span class='status-badge status-pending'>In Progress</span>
     * **Day 8: Styling & Custom CSS** <span class='status-badge status-upcoming'>Upcoming</span>
     * **Day 9: End-to-End Verification** <span class='status-badge status-upcoming'>Upcoming</span>
     * **Day 10: Final Prep, Report & PPT** <span class='status-badge status-upcoming'>Upcoming</span>
@@ -223,14 +223,8 @@ with col1:
     
     if "processed_files" not in st.session_state:
         st.session_state.processed_files = {}
-    if "last_answer" not in st.session_state:
-        st.session_state.last_answer = None
-    if "last_sources" not in st.session_state:
-        st.session_state.last_sources = []
-    if "last_latency" not in st.session_state:
-        st.session_state.last_latency = 0.0
-    if "last_query" not in st.session_state:
-        st.session_state.last_query = ""
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
 
     if uploaded_files:
         st.session_state.last_action = "upload"
@@ -254,16 +248,16 @@ with col1:
                         # Write file content
                         with open(file_path, "wb") as temp_file:
                             temp_file.write(f.getbuffer())
-                            # Load, extract text and split into chunks
-                            with time_it() as timer:
-                                docs = load_document(file_path)
-                                chunks = split_text(docs)
-                            st.session_state.processed_files[f.name] = {
-                                "docs": docs,
-                                "chunks": chunks,
-                                "time_taken": timer.elapsed,
-                                "size": f.size
-                            }
+                        # Load, extract text and split into chunks
+                        with time_it() as timer:
+                            docs = load_document(file_path)
+                            chunks = split_text(docs)
+                        st.session_state.processed_files[f.name] = {
+                            "docs": docs,
+                            "chunks": chunks,
+                            "time_taken": timer.elapsed,
+                            "size": f.size
+                        }
                     except Exception as e:
                         st.error(f"❌ Error processing {f.name}: {str(e)}")
             with st.spinner("🧠 Generating embeddings & building FAISS index..."):
@@ -334,10 +328,7 @@ with col1:
             with col_dev2:
                 if st.button("🗑️ Clear Cache", use_container_width=True):
                     st.session_state.processed_files.clear()
-                    st.session_state.last_answer = None
-                    st.session_state.last_sources = []
-                    st.session_state.last_latency = 0.0
-                    st.session_state.last_query = ""
+                    st.session_state.messages.clear()
                     if "last_action" in st.session_state:
                         del st.session_state.last_action
                     update_vector_store()
@@ -415,7 +406,16 @@ with col1:
 
 with col2:
     st.markdown("<div class='card'>", unsafe_allow_html=True)
-    st.subheader("💬 Interactive Assistant")
+    
+    # Split subheader and Clear Chat button using columns
+    col_header1, col_header2 = st.columns([3, 1])
+    with col_header1:
+        st.subheader("💬 Interactive Assistant")
+    with col_header2:
+        if st.session_state.processed_files and st.session_state.messages:
+            if st.button("🧹 Clear Chat", use_container_width=True, key="clear_chat_history_btn"):
+                st.session_state.messages.clear()
+                st.rerun()
     
     # Placeholder layout for Day 1 & Day 2
     if not st.session_state.processed_files:
@@ -427,50 +427,63 @@ with col2:
         </div>
         """, unsafe_allow_html=True)
     else:
-        st.write("Ask a question about your uploaded document(s):")
-        # Define a form so pressing enter submits it
-        with st.form(key="qa_form", clear_on_submit=False):
-            user_query = st.text_input("Ask a question:", placeholder="e.g. What are the key points discussed?", value=st.session_state.last_query)
-            submit_button = st.form_submit_button(label="🚀 Send Query")
-            
-            if submit_button and user_query.strip():
-                st.session_state.last_query = user_query
-                with st.spinner("🤔 DocSensei is thinking..."):
-                    with time_it() as timer:
-                        res = query_chatbot(user_query, st.session_state.vector_store)
-                    st.session_state.last_answer = res["answer"]
-                    st.session_state.last_sources = res["source_documents"]
-                    st.session_state.last_latency = timer.elapsed
-                st.rerun()
-                
-        if st.session_state.last_answer is not None:
-            st.markdown(f"<p style='color: #64748b; font-size: 0.85rem;'>⚡ Response generated in {st.session_state.last_latency:.2f}s</p>", unsafe_allow_html=True)
-            
-            # Display answer in a styled box
-            st.markdown(f"""
-            <div style='background: rgba(167, 139, 250, 0.05); padding: 1.5rem; border-radius: 12px; border: 1px solid rgba(167, 139, 250, 0.15); margin-bottom: 1.5rem;'>
-                <h4 style='color: #a78bfa; margin-top: 0; margin-bottom: 0.8rem;'>🤖 DocSensei's Response</h4>
-                <div style='color: #f0f2f6; font-size: 1rem; line-height: 1.6;'>
-                    {st.session_state.last_answer}
+        # Chat Message History Container
+        chat_container = st.container(height=450)
+        with chat_container:
+            if not st.session_state.messages:
+                st.markdown("""
+                <div style="text-align: center; padding: 2rem 1rem; color: #64748b;">
+                    <p style="font-size: 3rem; margin-bottom: 0.5rem;">🤖</p>
+                    <h4>Hello! I am DocSensei</h4>
+                    <p style="font-size: 0.9rem;">Ask me any questions about the loaded documents. I can search their content, generate citations, and recall our conversation history.</p>
                 </div>
-            </div>
-            """, unsafe_allow_html=True)
+                """, unsafe_allow_html=True)
+            else:
+                for msg in st.session_state.messages:
+                    with st.chat_message(msg["role"]):
+                        st.write(msg["content"])
+                        if msg["role"] == "assistant":
+                            if "latency" in msg:
+                                st.markdown(f"<p style='color: #64748b; font-size: 0.75rem; margin-top: -0.5rem; margin-bottom: 0.5rem;'>⚡ Response generated in {msg['latency']:.2f}s</p>", unsafe_allow_html=True)
+                            if "sources" in msg and msg["sources"]:
+                                with st.expander("📖 View Citations"):
+                                    for idx, source in enumerate(msg["sources"]):
+                                        st.markdown(f"**[Citation {idx+1}]** {source['file']} (Page {source['page']})")
+                                        st.markdown(f"*\"{source['snippet']}...\"*")
+                                        
+        # Chat input for querying
+        user_query = st.chat_input("Ask a question about your documents...", key="chat_query_input")
+        
+        if user_query:
+            # Append user message immediately
+            st.session_state.messages.append({"role": "user", "content": user_query})
             
-            # Display citations
-            if st.session_state.last_sources:
-                st.markdown("<h5 style='color: #94a3b8; font-weight: 600; margin-bottom: 0.5rem;'>📖 Source Citations</h5>", unsafe_allow_html=True)
-                for idx, doc in enumerate(st.session_state.last_sources):
-                    source_name = os.path.basename(doc.metadata.get("source", "unknown"))
-                    page_num = doc.metadata.get("page", "unknown")
-                    st.markdown(f"""
-                    <div style='background: rgba(255, 255, 255, 0.02); padding: 0.8rem; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.05); margin-bottom: 0.5rem;'>
-                        <span style='color: #ec4899; font-weight: 600;'>[Citation {idx+1}]</span> 
-                        <span style='color: #f0f2f6;'>{source_name} &bull; Page {page_num}</span>
-                        <p style='color: #94a3b8; font-size: 0.85rem; margin-top: 0.3rem; margin-bottom: 0; font-style: italic;'>
-                            "... {doc.page_content[:180].strip()} ..."
-                        </p>
-                    </div>
-                    """, unsafe_allow_html=True)
+            # Query chatbot with history
+            with st.spinner("🤔 DocSensei is thinking..."):
+                with time_it() as timer:
+                    res = query_chatbot(
+                        question=user_query,
+                        vector_store=st.session_state.vector_store,
+                        chat_history=st.session_state.messages[:-1]
+                    )
+                    
+                # Format source documents
+                sources = []
+                for doc in res["source_documents"]:
+                    sources.append({
+                        "file": os.path.basename(doc.metadata.get("source", "unknown")),
+                        "page": doc.metadata.get("page", "unknown"),
+                        "snippet": doc.page_content[:180].strip()
+                    })
+                    
+                # Append assistant response
+                st.session_state.messages.append({
+                    "role": "assistant",
+                    "content": res["answer"],
+                    "latency": timer.elapsed,
+                    "sources": sources
+                })
+            st.rerun()
     st.markdown("</div>", unsafe_allow_html=True)
 
     # Document details card
