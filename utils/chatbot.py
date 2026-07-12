@@ -66,3 +66,39 @@ def query_chatbot(question: str, vector_store, chat_history=None, k: int = 4):
             "answer": f"❌ Error querying Gemini API: {str(e)}",
             "source_documents": []
         }
+
+def generate_document_summary(processed_files):
+    """
+    Generates a structured summary of all processed files using Gemini API.
+    """
+    if not processed_files:
+        return "⚠️ No documents loaded to summarize."
+        
+    try:
+        combined_text = ""
+        for name, data in processed_files.items():
+            # Get document text
+            doc_text = ""
+            if "docs" in data and data["docs"]:
+                # Concatenate text from doc dicts
+                doc_text = "\n".join([doc["text"] for doc in data["docs"]])
+            
+            # Truncate text per file to stay within prompt limits
+            truncated_text = doc_text[:8000]
+            combined_text += f"\n--- Document: {name} ---\n{truncated_text}\n"
+            
+        summary_prompt = f"""You are DocSensei. Analyze the provided text extracts of the uploaded document(s) and generate a structured summary.
+Your summary must contain:
+1. **Core Overview**: A brief 2-3 sentence overview of what the document is about.
+2. **Key Themes & Bullet Points**: Main ideas, topics, or sections covered in the document.
+3. **Recommended Questions**: Provide 3-4 interesting questions that the user can ask DocSensei about these documents.
+
+Text extracts:
+{combined_text}
+"""
+        # Initialize LLM
+        llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.3)
+        response = llm.invoke([HumanMessage(content=summary_prompt)])
+        return response.content
+    except Exception as e:
+        return f"❌ Error generating summary: {str(e)}"

@@ -4,7 +4,7 @@ from utils.loader import load_document
 from utils.splitter import split_text
 from utils.embeddings import get_embeddings_model
 from utils.vectorstore import create_vector_store
-from utils.chatbot import query_chatbot
+from utils.chatbot import query_chatbot, generate_document_summary
 from utils.helpers import get_document_metrics, time_it
 
 # Helper to update vector store
@@ -187,8 +187,8 @@ with st.sidebar:
     * **Day 4: Embeddings & Vector Store** <span class='status-badge status-completed'>Completed</span>
     * **Day 5: Gemini LLM Integration** <span class='status-badge status-completed'>Completed</span>
     * **Day 6: Chat History Interface** <span class='status-badge status-completed'>Completed</span>
-    * **Day 7: Document Summarization** <span class='status-badge status-pending'>In Progress</span>
-    * **Day 8: Styling & Custom CSS** <span class='status-badge status-upcoming'>Upcoming</span>
+    * **Day 7: Document Summarization** <span class='status-badge status-completed'>Completed</span>
+    * **Day 8: Styling & Custom CSS** <span class='status-badge status-pending'>In Progress</span>
     * **Day 9: End-to-End Verification** <span class='status-badge status-upcoming'>Upcoming</span>
     * **Day 10: Final Prep, Report & PPT** <span class='status-badge status-upcoming'>Upcoming</span>
     """, unsafe_allow_html=True)
@@ -225,6 +225,8 @@ with col1:
         st.session_state.processed_files = {}
     if "messages" not in st.session_state:
         st.session_state.messages = []
+    if "summary" not in st.session_state:
+        st.session_state.summary = None
 
     if uploaded_files:
         st.session_state.last_action = "upload"
@@ -234,12 +236,14 @@ with col1:
         for name in list(st.session_state.processed_files.keys()):
             if name not in current_uploaded_names:
                 del st.session_state.processed_files[name]
+                st.session_state.summary = None
                 removed_any = True
                 
         # Identify files that need to be processed
         new_files_to_process = [f for f in uploaded_files if f.name not in st.session_state.processed_files]
         
         if new_files_to_process:
+            st.session_state.summary = None
             os.makedirs("uploads", exist_ok=True)
             with st.spinner("🔍 Extracting text from documents..."):
                 for f in new_files_to_process:
@@ -318,6 +322,7 @@ with col1:
                                     "time_taken": timer.elapsed,
                                     "size": os.path.getsize(file_path)
                                 }
+                                st.session_state.summary = None
                                 loaded_any = True
                             except Exception as e:
                                 st.error(f"❌ Error loading test file {fname}: {str(e)}")
@@ -329,6 +334,7 @@ with col1:
                 if st.button("🗑️ Clear Cache", use_container_width=True):
                     st.session_state.processed_files.clear()
                     st.session_state.messages.clear()
+                    st.session_state.summary = None
                     if "last_action" in st.session_state:
                         del st.session_state.last_action
                     update_vector_store()
@@ -401,6 +407,23 @@ with col1:
                     disabled=True,
                     key="doc_previewer_area"
                 )
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            # Document Summary Card
+            st.markdown("<div class='card'>", unsafe_allow_html=True)
+            st.subheader("📋 Document Summary")
+            
+            if st.session_state.summary is None:
+                st.write("Generate an AI-powered structured summary of the loaded documents:")
+                if st.button("⚡ Generate Summary", use_container_width=True, key="generate_summary_btn"):
+                    with st.spinner("🧠 Analyzing documents and generating summary..."):
+                        st.session_state.summary = generate_document_summary(st.session_state.processed_files)
+                    st.rerun()
+            else:
+                st.markdown(st.session_state.summary)
+                if st.button("🔄 Regenerate Summary", use_container_width=True, key="regenerate_summary_btn"):
+                    st.session_state.summary = None
+                    st.rerun()
             st.markdown("</div>", unsafe_allow_html=True)
 
 
