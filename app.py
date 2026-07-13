@@ -450,6 +450,40 @@ with col1:
                 st.markdown(f"<div style='margin-bottom: 0.5rem;'><span style='color: #a78bfa; font-weight: 500;'>📄 {name}</span> <span style='color: #64748b; font-size: 0.85rem;'>({data['size'] / 1024:.1f} KB) &bull; {chunks_count} chunks generated in {data['time_taken']:.2f}s</span></div>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
             
+            # Keyword Search & Highlighting Card
+            st.markdown("<div class='card'>", unsafe_allow_html=True)
+            st.subheader("🔍 Document Keyword Search")
+            st.write("Find occurrences of keywords in the document database:")
+            search_query = st.text_input("Enter keyword or phrase to search:", key="keyword_search_input")
+            if search_query.strip():
+                import re
+                matches_found = []
+                for fname, fdata in st.session_state.processed_files.items():
+                    doc_text = ""
+                    if "docs" in fdata and fdata["docs"]:
+                        doc_text = "\n".join([doc["text"] for doc in fdata["docs"]])
+                    
+                    pattern = re.compile(re.escape(search_query), re.IGNORECASE)
+                    paragraphs = doc_text.split("\n")
+                    for para in paragraphs:
+                        if search_query.lower() in para.lower() and len(para.strip()) > 5:
+                            # Highlight matches using HTML styles
+                            highlighted = pattern.sub(f"<span style='background-color: #fef08a; color: #1e293b; padding: 0.1rem 0.3rem; border-radius: 4px; font-weight: 600;'>\\g<0></span>", para.strip())
+                            matches_found.append({"file": fname, "text": highlighted})
+                
+                if matches_found:
+                    st.markdown(f"**Found {len(matches_found)} match(es):**")
+                    # Display inside a scrollable box for premium aesthetics
+                    st.markdown("<div style='max-height: 250px; overflow-y: auto; padding-right: 0.5rem;'>", unsafe_allow_html=True)
+                    for m in matches_found[:12]:
+                        st.markdown(f"<div style='background: rgba(255,255,255,0.02); border-left: 3px solid #a78bfa; padding: 0.6rem; margin-bottom: 0.6rem; border-radius: 0 8px 8px 0; font-size: 0.85rem;'><span style='color: #a78bfa; font-weight: 500;'>📄 {m['file']}</span><br/>{m['text']}</div>", unsafe_allow_html=True)
+                    st.markdown("</div>", unsafe_allow_html=True)
+                    if len(matches_found) > 12:
+                        st.info(f"Showing first 12 matches of {len(matches_found)}")
+                else:
+                    st.warning("No matches found for the search query.")
+            st.markdown("</div>", unsafe_allow_html=True)
+            
             # Text Previewer Card
             st.markdown("<div class='card'>", unsafe_allow_html=True)
             st.subheader("🔍 Text Previewer")
@@ -495,11 +529,37 @@ with col1:
 with col2:
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     
-    # Split subheader and Clear Chat button using columns
-    col_header1, col_header2 = st.columns([3, 1])
+    # Split subheader, Download, and Clear Chat buttons using columns
+    col_header1, col_header2, col_header3 = st.columns([2, 1, 1])
     with col_header1:
         st.subheader("💬 Interactive Assistant")
     with col_header2:
+        if st.session_state.processed_files and st.session_state.messages:
+            # Generate markdown text for chat history
+            md_lines = ["# 🎓 DocSensei - Chat Conversation Log\n"]
+            import datetime
+            md_lines.append(f"**Date:** {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+            md_lines.append("---\n")
+            for msg in st.session_state.messages:
+                role_name = "👤 User" if msg["role"] == "user" else "🤖 DocSensei"
+                md_lines.append(f"### {role_name}\n{msg['content']}\n")
+                if msg["role"] == "assistant" and "sources" in msg and msg["sources"]:
+                    md_lines.append("\n**Sources Cited:**\n")
+                    for src in msg["sources"]:
+                        md_lines.append(f"- {src['file']} (Page {src['page']})\n")
+                    md_lines.append("\n")
+                md_lines.append("---\n")
+            chat_md = "".join(md_lines)
+            
+            st.download_button(
+                label="📥 Download Chat",
+                data=chat_md,
+                file_name="docsensei_chat.md",
+                mime="text/markdown",
+                use_container_width=True,
+                key="download_chat_history_btn"
+            )
+    with col_header3:
         if st.session_state.processed_files and st.session_state.messages:
             if st.button("🧹 Clear Chat", use_container_width=True, key="clear_chat_history_btn"):
                 st.session_state.messages.clear()
