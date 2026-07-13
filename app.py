@@ -7,6 +7,15 @@ from utils.vectorstore import create_vector_store
 from utils.chatbot import query_chatbot, generate_document_summary
 from utils.helpers import get_document_metrics, time_it
 
+# Developer mode toggle. Set to True to display developer test/clear buttons.
+# Can be dynamically enabled by visiting: http://localhost:8501/?dev=true
+DEVELOPER_MODE = False
+try:
+    if hasattr(st, "query_params"):
+        DEVELOPER_MODE = st.query_params.get("dev", "false").lower() == "true"
+except Exception:
+    pass
+
 # Helper to update vector store
 def update_vector_store():
     """
@@ -358,7 +367,7 @@ with col1:
             st.success(f"📁 {len(st.session_state.processed_files)} file(s) loaded, chunked, and indexed in FAISS!")
 
     # Developer Quick-Load / Reset buttons at the bottom of the Upload card
-    if os.path.exists("test_files"):
+    if DEVELOPER_MODE and os.path.exists("test_files"):
         test_files = [f for f in os.listdir("test_files") if f.endswith((".pdf", ".docx"))]
         if test_files:
             st.markdown("---")
