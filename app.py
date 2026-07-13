@@ -74,7 +74,7 @@ st.markdown("""
         margin-top: 0;
     }
     
-    /* Card design with glassmorphism */
+    /* Card design with glassmorphism & hover state transitions */
     .card {
         background: rgba(30, 41, 59, 0.4);
         padding: 1.8rem;
@@ -82,6 +82,12 @@ st.markdown("""
         border: 1px solid rgba(148, 163, 184, 0.1);
         margin-bottom: 1.5rem;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .card:hover {
+        box-shadow: 0 10px 30px rgba(167, 139, 250, 0.08);
+        border-color: rgba(167, 139, 250, 0.25);
+        transform: translateY(-2px);
     }
     
     /* Custom Sidebar styling */
@@ -158,6 +164,65 @@ st.markdown("""
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
+    
+    /* Custom file uploader style */
+    div[data-testid="stFileUploader"] {
+        background-color: rgba(15, 23, 42, 0.2) !important;
+        border: 1px dashed rgba(167, 139, 250, 0.2) !important;
+        border-radius: 12px !important;
+        padding: 1.5rem !important;
+        transition: border-color 0.3s ease, background-color 0.3s ease !important;
+    }
+    div[data-testid="stFileUploader"]:hover {
+        border-color: rgba(167, 139, 250, 0.6) !important;
+        background-color: rgba(15, 23, 42, 0.4) !important;
+    }
+    
+    /* Monospace previewer field styling */
+    div[data-testid="stTextArea"] textarea {
+        font-family: 'Fira Code', 'Courier New', Courier, monospace !important;
+        font-size: 0.85rem !important;
+        background-color: rgba(15, 23, 42, 0.6) !important;
+        border: 1px solid rgba(148, 163, 184, 0.1) !important;
+        border-radius: 8px !important;
+        color: #cbd5e1 !important;
+        line-height: 1.5 !important;
+    }
+    
+    /* Global button styling */
+    .stButton > button {
+        background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 8px !important;
+        padding: 0.55rem 1.2rem !important;
+        font-weight: 600 !important;
+        font-family: 'Inter', sans-serif !important;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2) !important;
+        text-align: center !important;
+        width: 100% !important;
+    }
+    .stButton > button:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4) !important;
+        filter: brightness(1.1) !important;
+    }
+    .stButton > button:active {
+        transform: translateY(0) !important;
+    }
+    
+    /* Input text elements styling */
+    .stTextInput > div > div > input {
+        background-color: rgba(15, 23, 42, 0.6) !important;
+        border: 1px solid rgba(148, 163, 184, 0.2) !important;
+        color: #f8fafc !important;
+        border-radius: 8px !important;
+    }
+    .stTextInput > div > div > input:focus {
+        border-color: #a78bfa !important;
+        box-shadow: 0 0 0 2px rgba(167, 139, 250, 0.2) !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -188,8 +253,8 @@ with st.sidebar:
     * **Day 5: Gemini LLM Integration** <span class='status-badge status-completed'>Completed</span>
     * **Day 6: Chat History Interface** <span class='status-badge status-completed'>Completed</span>
     * **Day 7: Document Summarization** <span class='status-badge status-completed'>Completed</span>
-    * **Day 8: Styling & Custom CSS** <span class='status-badge status-pending'>In Progress</span>
-    * **Day 9: End-to-End Verification** <span class='status-badge status-upcoming'>Upcoming</span>
+    * **Day 8: Styling & Custom CSS** <span class='status-badge status-completed'>Completed</span>
+    * **Day 9: End-to-End Verification** <span class='status-badge status-pending'>In Progress</span>
     * **Day 10: Final Prep, Report & PPT** <span class='status-badge status-upcoming'>Upcoming</span>
     """, unsafe_allow_html=True)
     
