@@ -45,13 +45,84 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Premium Custom CSS styling for visual excellence (Dark theme, glassmorphism, smooth animations)
+# Theme State Initialization
+if "theme_mode" not in st.session_state:
+    st.session_state.theme_mode = True # Default is Dark Mode
+
+# Load theme CSS based on st.session_state.theme_mode
+if st.session_state.theme_mode:
+    theme_css = """
+    <style>
+        :root {
+            --app-bg: linear-gradient(135deg, #0e1117 0%, #1e1e2f 100%);
+            --text-color: #f0f2f6;
+            --card-bg: rgba(30, 41, 59, 0.4);
+            --card-border: rgba(148, 163, 184, 0.1);
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            --card-hover-shadow: 0 10px 30px rgba(167, 139, 250, 0.08);
+            --card-hover-border: rgba(167, 139, 250, 0.25);
+            --sidebar-bg: #0b0f19;
+            --sidebar-border: rgba(255, 255, 255, 0.05);
+            --input-bg: rgba(15, 23, 42, 0.6) !important;
+            --input-border: rgba(148, 163, 184, 0.2) !important;
+            --input-color: #f8fafc !important;
+            --stat-box-bg: rgba(255, 255, 255, 0.02);
+            --stat-label-color: #94a3b8;
+            --tech-tag-bg: rgba(167, 139, 250, 0.15);
+            --tech-tag-color: #c084fc;
+        }
+    </style>
+    """
+else:
+    theme_css = """
+    <style>
+        :root {
+            --app-bg: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --text-color: #0f172a;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --card-border: rgba(15, 23, 42, 0.08);
+            --card-shadow: 0 4px 15px rgba(15, 23, 42, 0.05);
+            --card-hover-shadow: 0 10px 25px rgba(167, 139, 250, 0.12);
+            --card-hover-border: rgba(167, 139, 250, 0.4);
+            --sidebar-bg: #f1f5f9;
+            --sidebar-border: rgba(15, 23, 42, 0.1);
+            --input-bg: rgba(255, 255, 255, 0.95) !important;
+            --input-border: rgba(15, 23, 42, 0.15) !important;
+            --input-color: #0f172a !important;
+            --stat-box-bg: rgba(255, 255, 255, 0.9);
+            --stat-label-color: #475569;
+            --tech-tag-bg: rgba(167, 139, 250, 0.1);
+            --tech-tag-color: #7c3aed;
+        }
+        
+        /* Light Mode Specific overrides */
+        div[data-testid="stExpander"] {
+            background-color: rgba(255, 255, 255, 0.6) !important;
+            border: 1px solid rgba(15, 23, 42, 0.08) !important;
+        }
+        div[data-testid="stMarkdownContainer"] p, div[data-testid="stMarkdownContainer"] li {
+            color: #0f172a !important;
+        }
+        span[data-testid="stHeader"] {
+            background-color: transparent !important;
+        }
+        .stMarkdown div p {
+            color: #475569 !important;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            color: #0f172a !important;
+        }
+    </style>
+    """
+st.markdown(theme_css, unsafe_allow_html=True)
+
+# Premium Custom CSS styling for visual excellence
 st.markdown("""
 <style>
     /* Main App Background & Text */
-    .stApp {
-        background: linear-gradient(135deg, #0e1117 0%, #1e1e2f 100%);
-        color: #f0f2f6;
+    .stApp, [data-testid="stAppViewContainer"] {
+        background: var(--app-bg) !important;
+        color: var(--text-color) !important;
     }
     
     /* Premium Title Header */
@@ -78,45 +149,47 @@ st.markdown("""
     .subtitle {
         font-family: 'Inter', sans-serif;
         font-size: 1.15rem;
-        color: #94a3b8;
+        color: var(--text-color);
+        opacity: 0.8;
         font-weight: 300;
         margin-top: 0;
     }
     
     /* Card design with glassmorphism & hover state transitions */
     .card {
-        background: rgba(30, 41, 59, 0.4);
+        background: var(--card-bg);
         padding: 1.8rem;
         border-radius: 16px;
-        border: 1px solid rgba(148, 163, 184, 0.1);
+        border: 1px solid var(--card-border);
         margin-bottom: 1.5rem;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        box-shadow: var(--card-shadow);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .card:hover {
-        box-shadow: 0 10px 30px rgba(167, 139, 250, 0.08);
-        border-color: rgba(167, 139, 250, 0.25);
+        box-shadow: var(--card-hover-shadow);
+        border-color: var(--card-hover-border);
         transform: translateY(-2px);
     }
     
     /* Custom Sidebar styling */
-    section[data-testid="stSidebar"] {
-        background-color: #0b0f19 !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.05);
+    [data-testid="stSidebar"], section[data-testid="stSidebar"], [data-testid="stSidebarUserContent"] {
+        background: var(--sidebar-bg) !important;
+        background-color: var(--sidebar-bg) !important;
+        border-right: 1px solid var(--sidebar-border) !important;
     }
     
     /* Tech Stack tag style */
     .tech-tag {
         display: inline-block;
-        background: rgba(167, 139, 250, 0.15);
-        color: #c084fc;
+        background: var(--tech-tag-bg);
+        color: var(--tech-tag-color);
         padding: 0.25rem 0.6rem;
         border-radius: 20px;
         font-size: 0.8rem;
         font-weight: 600;
         margin-right: 0.5rem;
         margin-bottom: 0.5rem;
-        border: 1px solid rgba(167, 139, 250, 0.2);
+        border: 1px solid var(--tech-tag-color);
     }
     
     /* Day progress status classes */
@@ -150,8 +223,8 @@ st.markdown("""
     }
     .stat-box {
         flex: 1;
-        background: rgba(255, 255, 255, 0.02);
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        background: var(--stat-box-bg);
+        border: 1px solid var(--card-border);
         border-radius: 12px;
         padding: 0.8rem;
         text-align: center;
@@ -169,53 +242,48 @@ st.markdown("""
     }
     .stat-label {
         font-size: 0.7rem;
-        color: #94a3b8;
+        color: var(--stat-label-color);
         text-transform: uppercase;
         letter-spacing: 0.5px;
     }
     
     /* Custom file uploader style */
     div[data-testid="stFileUploader"] {
-        background-color: rgba(15, 23, 42, 0.2) !important;
-        border: 1px dashed rgba(167, 139, 250, 0.2) !important;
+        background-color: var(--input-bg) !important;
+        border: 1px dashed var(--input-border) !important;
         border-radius: 12px !important;
         padding: 1.5rem !important;
         transition: border-color 0.3s ease, background-color 0.3s ease !important;
     }
     div[data-testid="stFileUploader"]:hover {
         border-color: rgba(167, 139, 250, 0.6) !important;
-        background-color: rgba(15, 23, 42, 0.4) !important;
     }
     
     /* Monospace previewer field styling */
     div[data-testid="stTextArea"] textarea {
         font-family: 'Fira Code', 'Courier New', Courier, monospace !important;
         font-size: 0.85rem !important;
-        background-color: rgba(15, 23, 42, 0.6) !important;
-        border: 1px solid rgba(148, 163, 184, 0.1) !important;
+        background-color: var(--input-bg) !important;
+        border: 1px solid var(--input-border) !important;
         border-radius: 8px !important;
-        color: #cbd5e1 !important;
+        color: var(--input-color) !important;
         line-height: 1.5 !important;
     }
     
     /* Global button styling */
     .stButton > button {
-        background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%) !important;
-        color: white !important;
+        background: linear-gradient(90deg, #8b5cf6 0%, #6366f1 100%) !important;
+        color: #ffffff !important;
         border: none !important;
         border-radius: 8px !important;
-        padding: 0.55rem 1.2rem !important;
+        padding: 0.5rem 1rem !important;
         font-weight: 600 !important;
-        font-family: 'Inter', sans-serif !important;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2) !important;
-        text-align: center !important;
-        width: 100% !important;
+        transition: all 0.2s ease-in-out !important;
+        box-shadow: 0 4px 10px rgba(99, 102, 241, 0.2) !important;
     }
     .stButton > button:hover {
-        transform: translateY(-2px) !important;
-        box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4) !important;
-        filter: brightness(1.1) !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 6px 15px rgba(99, 102, 241, 0.4) !important;
     }
     .stButton > button:active {
         transform: translateY(0) !important;
@@ -223,9 +291,9 @@ st.markdown("""
     
     /* Input text elements styling */
     .stTextInput > div > div > input {
-        background-color: rgba(15, 23, 42, 0.6) !important;
-        border: 1px solid rgba(148, 163, 184, 0.2) !important;
-        color: #f8fafc !important;
+        background-color: var(--input-bg) !important;
+        border: 1px solid var(--input-border) !important;
+        color: var(--input-color) !important;
         border-radius: 8px !important;
     }
     .stTextInput > div > div > input:focus {
@@ -238,6 +306,9 @@ st.markdown("""
 # --- SIDEBAR DESIGN ---
 with st.sidebar:
     st.markdown("<div style='text-align: center; padding: 1rem 0;'><h2 style='color:#a78bfa; font-weight:700;'>🎓 DocSensei</h2><p style='color:#64748b; font-size:0.9rem;'>AI PDF & DOCX QA System</p></div>", unsafe_allow_html=True)
+    
+    # Theme mode switch toggle
+    st.toggle("🌙 Dark Mode", key="theme_mode")
     st.markdown("---")
     
     st.subheader("📤 Document Upload")
@@ -576,10 +647,16 @@ with col1:
 with col2:
     st.markdown("<div class='card'>", unsafe_allow_html=True)
     
-    # Split subheader, Download, and Clear Chat buttons using columns
-    col_header1, col_header2, col_header3 = st.columns([2, 1, 1])
+    clicked_suggestion = None
+    
+    # Split subheader, MCQ, Download, and Clear Chat buttons using columns
+    col_header1, col_header_mcq, col_header2, col_header3 = st.columns([1.8, 1.2, 1.2, 0.8])
     with col_header1:
         st.subheader("💬 Interactive Assistant")
+    with col_header_mcq:
+        if st.session_state.processed_files:
+            if st.button("🗂️ Generate MCQs", use_container_width=True, key="generate_mcqs_header_btn"):
+                clicked_suggestion = "Generate MCQs"
     with col_header2:
         if st.session_state.processed_files and st.session_state.messages:
             # Generate markdown text for chat history
@@ -627,12 +704,27 @@ with col2:
         with chat_container:
             if not st.session_state.messages:
                 st.markdown("""
-                <div style="text-align: center; padding: 2rem 1rem; color: #64748b;">
-                    <p style="font-size: 3rem; margin-bottom: 0.5rem;">🤖</p>
-                    <h4>Hello! I am DocSensei</h4>
-                    <p style="font-size: 0.9rem;">Ask me any questions about the loaded documents. I can search their content, generate citations, and recall our conversation history.</p>
+                <div style="text-align: center; padding: 1.5rem 1rem 0.5rem 1rem;">
+                    <p style="font-size: 2.5rem; margin-bottom: 0.5rem;">🤖</p>
+                    <h4 style="margin-bottom: 0.5rem; font-family: 'Outfit', sans-serif;">Hello! I am DocSensei</h4>
+                    <p style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 1rem;">Ask me any questions about the loaded documents. I can search their content, generate citations, and recall our conversation history.</p>
                 </div>
                 """, unsafe_allow_html=True)
+                
+                st.markdown("<p style='font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; text-align: center; opacity: 0.8;'>💡 Suggested Questions:</p>", unsafe_allow_html=True)
+                col_s1, col_s2 = st.columns(2)
+                with col_s1:
+                    if st.button("📝 Summarize this document", use_container_width=True, key="sug_sum"):
+                        clicked_suggestion = "Summarize this document"
+                    if st.button("🔑 Key Topics", use_container_width=True, key="sug_topics"):
+                        clicked_suggestion = "Key Topics"
+                    if st.button("📖 Important Definitions", use_container_width=True, key="sug_def"):
+                        clicked_suggestion = "Important Definitions"
+                with col_s2:
+                    if st.button("🗂️ Generate MCQs", use_container_width=True, key="sug_mcqs"):
+                        clicked_suggestion = "Generate MCQs"
+                    if st.button("💡 Explain Chapter 4", use_container_width=True, key="sug_ch4"):
+                        clicked_suggestion = "Explain Chapter 4"
             else:
                 for msg in st.session_state.messages:
                     with st.chat_message(msg["role"]):
@@ -649,6 +741,10 @@ with col2:
         # Chat input for querying
         user_query = st.chat_input("Ask a question about your documents...", key="chat_query_input")
         
+        # Override user_query if a suggestion was clicked
+        if clicked_suggestion:
+            user_query = clicked_suggestion
+            
         if user_query:
             # Append user message immediately
             st.session_state.messages.append({"role": "user", "content": user_query})
