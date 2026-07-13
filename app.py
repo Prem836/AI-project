@@ -240,56 +240,9 @@ with st.sidebar:
     st.markdown("<div style='text-align: center; padding: 1rem 0;'><h2 style='color:#a78bfa; font-weight:700;'>🎓 DocSensei</h2><p style='color:#64748b; font-size:0.9rem;'>AI PDF & DOCX QA System</p></div>", unsafe_allow_html=True)
     st.markdown("---")
     
-    st.subheader("🛠 Technologies Used")
-    st.markdown("""
-    <span class='tech-tag'>Streamlit</span>
-    <span class='tech-tag'>LangChain</span>
-    <span class='tech-tag'>Hugging Face</span>
-    <span class='tech-tag'>FAISS</span>
-    <span class='tech-tag'>Google Gemini</span>
-    <span class='tech-tag'>PyPDF & Docx</span>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    
-    st.subheader("📅 Project Roadmap & Status")
-    
-    st.markdown("""
-    * **Day 1: Base UI Setup** <span class='status-badge status-completed'>Completed</span>
-    * **Day 2: Doc Loading & Text Extraction** <span class='status-badge status-completed'>Completed</span>
-    * **Day 3: Text Chunking** <span class='status-badge status-completed'>Completed</span>
-    * **Day 4: Embeddings & Vector Store** <span class='status-badge status-completed'>Completed</span>
-    * **Day 5: Gemini LLM Integration** <span class='status-badge status-completed'>Completed</span>
-    * **Day 6: Chat History Interface** <span class='status-badge status-completed'>Completed</span>
-    * **Day 7: Document Summarization** <span class='status-badge status-completed'>Completed</span>
-    * **Day 8: Styling & Custom CSS** <span class='status-badge status-completed'>Completed</span>
-    * **Day 9: End-to-End Verification** <span class='status-badge status-pending'>In Progress</span>
-    * **Day 10: Final Prep, Report & PPT** <span class='status-badge status-upcoming'>Upcoming</span>
-    """, unsafe_allow_html=True)
-    
-    st.markdown("---")
-    st.markdown("<div style='text-align: center; color: #475569; font-size:0.8rem;'>DocSensei v1.0.0 &copy; 2026</div>", unsafe_allow_html=True)
-
-
-# --- MAIN AREA DESIGN ---
-st.markdown("""
-<div class="header-container">
-    <div class="main-title">DocSensei</div>
-    <div class="subtitle">Interact with your PDFs & Word documents using the power of local Embeddings & Google Gemini</div>
-</div>
-""", unsafe_allow_html=True)
-
-# Layout: Upload on the left, instructions/chat on the right
-col1, col2 = st.columns([1, 2], gap="large")
-
-with col1:
-    st.markdown("<div class='card'>", unsafe_allow_html=True)
     st.subheader("📤 Document Upload")
-    st.write("Upload your documents to build the knowledge database.")
-    
-    # File uploader widget accepting PDF and DOCX files
     uploaded_files = st.file_uploader(
-        "Choose PDF or DOCX files",
+        "Upload PDF or DOCX files",
         type=["pdf", "docx"],
         accept_multiple_files=True,
         key="doc_uploader"
@@ -414,125 +367,210 @@ with col1:
                     update_vector_store()
                     st.rerun()
 
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown("---")
+    st.subheader("🛠 Technologies Used")
+    st.markdown("""
+    <span class='tech-tag'>Streamlit</span>
+    <span class='tech-tag'>LangChain</span>
+    <span class='tech-tag'>Hugging Face</span>
+    <span class='tech-tag'>FAISS</span>
+    <span class='tech-tag'>Google Gemini</span>
+    <span class='tech-tag'>PyPDF & Docx</span>
+    """, unsafe_allow_html=True)
     
-    # Show stats and previewer as separate cards outside the Upload card but within col1
-    if st.session_state.processed_files:
-        # Collect all loaded docs
-        all_documents = []
-        for name, data in st.session_state.processed_files.items():
-            all_documents.extend(data["docs"])
-            
-        if all_documents:
-            # Metrics Card
-            st.markdown("<div class='card'>", unsafe_allow_html=True)
-            st.subheader("📊 Extraction & Chunking Metrics")
-            metrics = get_document_metrics(all_documents)
-            total_chunks = sum(len(data.get("chunks", [])) for data in st.session_state.processed_files.values())
-            avg_chunk_size = metrics['total_chars'] / total_chunks if total_chunks > 0 else 0
-            
-            st.markdown(f"""
-            <div class="stat-container">
-                <div class="stat-box">
-                    <div class="stat-number">{metrics['doc_count']}</div>
-                    <div class="stat-label">Documents</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-number">{metrics['page_count']}</div>
-                    <div class="stat-label">Total Pages</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-number">{total_chunks}</div>
-                    <div class="stat-label">Total Chunks</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-number">{metrics['total_chars']:,}</div>
-                    <div class="stat-label">Characters</div>
-                </div>
+    st.markdown("---")
+    st.subheader("📅 Project Roadmap & Status")
+    st.markdown("""
+    * **Day 1: Base UI Setup** <span class='status-badge status-completed'>Completed</span>
+    * **Day 2: Doc Loading & Text Extraction** <span class='status-badge status-completed'>Completed</span>
+    * **Day 3: Text Chunking** <span class='status-badge status-completed'>Completed</span>
+    * **Day 4: Embeddings & Vector Store** <span class='status-badge status-completed'>Completed</span>
+    * **Day 5: Gemini LLM Integration** <span class='status-badge status-completed'>Completed</span>
+    * **Day 6: Chat History Interface** <span class='status-badge status-completed'>Completed</span>
+    * **Day 7: Document Summarization** <span class='status-badge status-completed'>Completed</span>
+    * **Day 8: Styling & Custom CSS** <span class='status-badge status-completed'>Completed</span>
+    * **Day 9: End-to-End Verification** <span class='status-badge status-pending'>In Progress</span>
+    * **Day 10: Final Prep, Report & PPT** <span class='status-badge status-upcoming'>Upcoming</span>
+    """, unsafe_allow_html=True)
+    
+    st.markdown("---")
+    st.markdown("<div style='text-align: center; color: #475569; font-size:0.8rem;'>DocSensei v1.0.0 &copy; 2026</div>", unsafe_allow_html=True)
+
+
+# --- MAIN AREA LAYOUT ---
+st.markdown("""
+<div class="header-container">
+    <div class="main-title">DocSensei</div>
+    <div class="subtitle">Interact with your PDFs & Word documents using the power of local Embeddings & Google Gemini</div>
+</div>
+""", unsafe_allow_html=True)
+
+if not st.session_state.processed_files:
+    # --- LANDING DASHBOARD VIEW ---
+    st.markdown("""
+    <div style="text-align: center; padding: 2.5rem; background: rgba(30, 41, 59, 0.25); border-radius: 24px; border: 1px solid rgba(148, 163, 184, 0.1); margin-bottom: 2rem; backdrop-filter: blur(10px);">
+        <p style="font-size: 5.5rem; margin-bottom: 0.5rem; animation: pulse 2s infinite;">🧠</p>
+        <h1 style="font-family: 'Outfit', sans-serif; font-weight: 800; background: linear-gradient(90deg, #a78bfa 0%, #ec4899 50%, #f43f5e 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem; letter-spacing: -0.5px;">Welcome to DocSensei</h1>
+        <p style="color: #94a3b8; font-size: 1.15rem; font-weight: 300; max-width: 650px; margin: 0 auto 1.5rem auto; line-height: 1.6;">
+            Unlock the hidden insights in your research papers, notes, or business files. Upload PDF or Word documents to instantly chat with them, search keywords, and generate summaries.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Feature Cards Grid
+    col_feat1, col_feat2 = st.columns(2, gap="large")
+    with col_feat1:
+        st.markdown("""
+        <div class="card" style="height: 100%;">
+            <h3 style="color: #a78bfa; margin-top: 0; font-family: 'Outfit', sans-serif;">🤖 Context-Aware Q&A Chat</h3>
+            <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.5;">Ask questions in natural language. The assistant answers strictly based on the content of your documents with clickable source page citations to prevent hallucinations.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("""
+        <div class="card" style="height: 100%;">
+            <h3 style="color: #f43f5e; margin-top: 0; font-family: 'Outfit', sans-serif;">📋 AI-Powered Summarization</h3>
+            <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.5;">Generate rich, bulleted summaries of all loaded documents on-demand, including auto-suggested questions tailored specifically to the file content.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_feat2:
+        st.markdown("""
+        <div class="card" style="height: 100%;">
+            <h3 style="color: #ec4899; margin-top: 0; font-family: 'Outfit', sans-serif;">🔍 Highlighting Keyword Search</h3>
+            <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.5;">Perform instant keyword searches across all loaded files. Highlights matching text blocks and overlays yellow markers over key terms.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown("""
+        <div class="card" style="height: 100%;">
+            <h3 style="color: #34d399; margin-top: 0; font-family: 'Outfit', sans-serif;">💾 Secure Local FAISS Database</h3>
+            <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.5;">Your documents are chunked and indexed locally using secure sentence embeddings from Hugging Face for privacy and speed.</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+    st.markdown("""
+    <div style="background: rgba(167, 139, 250, 0.05); border: 1px solid rgba(167, 139, 250, 0.2); padding: 1.2rem; border-radius: 12px; text-align: center; margin-top: 2rem; color: #a78bfa; font-weight: 500;">
+        👈 To get started, please drag and drop or choose PDF/DOCX files in the uploader inside the left sidebar.
+    </div>
+    """, unsafe_allow_html=True)
+    
+    st.stop()
+
+# --- WORKSPACE VIEW (FILES LOADED) ---
+col1, col2 = st.columns([1, 1.2], gap="large")
+
+with col1:
+    # Collect all loaded docs
+    all_documents = []
+    for name, data in st.session_state.processed_files.items():
+        all_documents.extend(data["docs"])
+        
+    if all_documents:
+        # Metrics Card
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.subheader("📊 Extraction & Chunking Metrics")
+        metrics = get_document_metrics(all_documents)
+        total_chunks = sum(len(data.get("chunks", [])) for data in st.session_state.processed_files.values())
+        avg_chunk_size = metrics['total_chars'] / total_chunks if total_chunks > 0 else 0
+        
+        st.markdown(f"""
+        <div class="stat-container">
+            <div class="stat-box">
+                <div class="stat-number">{metrics['doc_count']}</div>
+                <div class="stat-label">Documents</div>
             </div>
-            """, unsafe_allow_html=True)
-            st.markdown(f"<div style='font-size: 0.85rem; color: #94a3b8; text-align: center; margin-bottom: 1rem;'>💡 Average Chunk Size: <strong>{avg_chunk_size:.1f}</strong> characters &bull; Target Chunk Size: <strong>1000</strong> &bull; Overlap: <strong>200</strong></div>", unsafe_allow_html=True)
-            
-            # File list detail
-            for name, data in st.session_state.processed_files.items():
-                chunks_count = len(data.get("chunks", []))
-                st.markdown(f"<div style='margin-bottom: 0.5rem;'><span style='color: #a78bfa; font-weight: 500;'>📄 {name}</span> <span style='color: #64748b; font-size: 0.85rem;'>({data['size'] / 1024:.1f} KB) &bull; {chunks_count} chunks generated in {data['time_taken']:.2f}s</span></div>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-            
-            # Keyword Search & Highlighting Card
-            st.markdown("<div class='card'>", unsafe_allow_html=True)
-            st.subheader("🔍 Document Keyword Search")
-            st.write("Find occurrences of keywords in the document database:")
-            search_query = st.text_input("Enter keyword or phrase to search:", key="keyword_search_input")
-            if search_query.strip():
-                import re
-                matches_found = []
-                for fname, fdata in st.session_state.processed_files.items():
-                    doc_text = ""
-                    if "docs" in fdata and fdata["docs"]:
-                        doc_text = "\n".join([doc["text"] for doc in fdata["docs"]])
-                    
-                    pattern = re.compile(re.escape(search_query), re.IGNORECASE)
-                    paragraphs = doc_text.split("\n")
-                    for para in paragraphs:
-                        if search_query.lower() in para.lower() and len(para.strip()) > 5:
-                            # Highlight matches using HTML styles
-                            highlighted = pattern.sub(f"<span style='background-color: #fef08a; color: #1e293b; padding: 0.1rem 0.3rem; border-radius: 4px; font-weight: 600;'>\\g<0></span>", para.strip())
-                            matches_found.append({"file": fname, "text": highlighted})
+            <div class="stat-box">
+                <div class="stat-number">{metrics['page_count']}</div>
+                <div class="stat-label">Total Pages</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">{total_chunks}</div>
+                <div class="stat-label">Total Chunks</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">{metrics['total_chars']:,}</div>
+                <div class="stat-label">Characters</div>
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+        st.markdown(f"<div style='font-size: 0.85rem; color: #94a3b8; text-align: center; margin-bottom: 1rem;'>💡 Average Chunk Size: <strong>{avg_chunk_size:.1f}</strong> characters &bull; Target Chunk Size: <strong>1000</strong> &bull; Overlap: <strong>200</strong></div>", unsafe_allow_html=True)
+        
+        # File list detail
+        for name, data in st.session_state.processed_files.items():
+            chunks_count = len(data.get("chunks", []))
+            st.markdown(f"<div style='margin-bottom: 0.5rem;'><span style='color: #a78bfa; font-weight: 500;'>📄 {name}</span> <span style='color: #64748b; font-size: 0.85rem;'>({data['size'] / 1024:.1f} KB) &bull; {chunks_count} chunks generated in {data['time_taken']:.2f}s</span></div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        # Keyword Search & Highlighting Card
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.subheader("🔍 Document Keyword Search")
+        st.write("Find occurrences of keywords in the document database:")
+        search_query = st.text_input("Enter keyword or phrase to search:", key="keyword_search_input")
+        if search_query.strip():
+            import re
+            matches_found = []
+            for fname, fdata in st.session_state.processed_files.items():
+                doc_text = ""
+                if "docs" in fdata and fdata["docs"]:
+                    doc_text = "\n".join([doc["text"] for doc in fdata["docs"]])
                 
-                if matches_found:
-                    st.markdown(f"**Found {len(matches_found)} match(es):**")
-                    # Display inside a scrollable box for premium aesthetics
-                    st.markdown("<div style='max-height: 250px; overflow-y: auto; padding-right: 0.5rem;'>", unsafe_allow_html=True)
-                    for m in matches_found[:12]:
-                        st.markdown(f"<div style='background: rgba(255,255,255,0.02); border-left: 3px solid #a78bfa; padding: 0.6rem; margin-bottom: 0.6rem; border-radius: 0 8px 8px 0; font-size: 0.85rem;'><span style='color: #a78bfa; font-weight: 500;'>📄 {m['file']}</span><br/>{m['text']}</div>", unsafe_allow_html=True)
-                    st.markdown("</div>", unsafe_allow_html=True)
-                    if len(matches_found) > 12:
-                        st.info(f"Showing first 12 matches of {len(matches_found)}")
-                else:
-                    st.warning("No matches found for the search query.")
-            st.markdown("</div>", unsafe_allow_html=True)
+                pattern = re.compile(re.escape(search_query), re.IGNORECASE)
+                paragraphs = doc_text.split("\n")
+                for para in paragraphs:
+                    if search_query.lower() in para.lower() and len(para.strip()) > 5:
+                        highlighted = pattern.sub(f"<span style='background-color: #fef08a; color: #1e293b; padding: 0.1rem 0.3rem; border-radius: 4px; font-weight: 600;'>\\g<0></span>", para.strip())
+                        matches_found.append({"file": fname, "text": highlighted})
             
-            # Text Previewer Card
-            st.markdown("<div class='card'>", unsafe_allow_html=True)
-            st.subheader("🔍 Text Previewer")
-            selected_file = st.selectbox(
-                "Choose a document to inspect:",
-                options=list(st.session_state.processed_files.keys()),
-                key="doc_previewer_select"
-            )
-            if selected_file:
-                file_data = st.session_state.processed_files[selected_file]
-                full_text = file_data["docs"][0]["text"]
-                preview_len = min(1000, len(full_text))
-                preview_text = full_text[:preview_len]
-                if len(full_text) > 1000:
-                    preview_text += "\n\n... [Truncated: Showing first 1000 characters] ..."
-                st.text_area(
-                    f"Content Preview ({preview_len:,} / {len(full_text):,} chars):",
-                    value=preview_text,
-                    height=200,
-                    disabled=True,
-                    key="doc_previewer_area"
-                )
-            st.markdown("</div>", unsafe_allow_html=True)
-            
-            # Document Summary Card
-            st.markdown("<div class='card'>", unsafe_allow_html=True)
-            st.subheader("📋 Document Summary")
-            
-            if st.session_state.summary is None:
-                st.write("Generate an AI-powered structured summary of the loaded documents:")
-                if st.button("⚡ Generate Summary", use_container_width=True, key="generate_summary_btn"):
-                    with st.spinner("🧠 Analyzing documents and generating summary..."):
-                        st.session_state.summary = generate_document_summary(st.session_state.processed_files)
-                    st.rerun()
+            if matches_found:
+                st.markdown(f"**Found {len(matches_found)} match(es):**")
+                st.markdown("<div style='max-height: 250px; overflow-y: auto; padding-right: 0.5rem;'>", unsafe_allow_html=True)
+                for m in matches_found[:12]:
+                    st.markdown(f"<div style='background: rgba(255,255,255,0.02); border-left: 3px solid #a78bfa; padding: 0.6rem; margin-bottom: 0.6rem; border-radius: 0 8px 8px 0; font-size: 0.85rem;'><span style='color: #a78bfa; font-weight: 500;'>📄 {m['file']}</span><br/>{m['text']}</div>", unsafe_allow_html=True)
+                st.markdown("</div>", unsafe_allow_html=True)
+                if len(matches_found) > 12:
+                    st.info(f"Showing first 12 matches of {len(matches_found)}")
             else:
-                st.markdown(st.session_state.summary)
-                if st.button("🔄 Regenerate Summary", use_container_width=True, key="regenerate_summary_btn"):
-                    st.session_state.summary = None
-                    st.rerun()
-            st.markdown("</div>", unsafe_allow_html=True)
+                st.warning("No matches found for the search query.")
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        # Text Previewer Card
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.subheader("🔍 Text Previewer")
+        selected_file = st.selectbox(
+            "Choose a document to inspect:",
+            options=list(st.session_state.processed_files.keys()),
+            key="doc_previewer_select"
+        )
+        if selected_file:
+            file_data = st.session_state.processed_files[selected_file]
+            full_text = file_data["docs"][0]["text"]
+            preview_len = min(1000, len(full_text))
+            preview_text = full_text[:preview_len]
+            if len(full_text) > 1000:
+                preview_text += "\n\n... [Truncated: Showing first 1000 characters] ..."
+            st.text_area(
+                f"Content Preview ({preview_len:,} / {len(full_text):,} chars):",
+                value=preview_text,
+                height=200,
+                disabled=True,
+                key="doc_previewer_area"
+            )
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        # Document Summary Card
+        st.markdown("<div class='card'>", unsafe_allow_html=True)
+        st.subheader("📋 Document Summary")
+        
+        if st.session_state.summary is None:
+            st.write("Generate an AI-powered structured summary of the loaded documents:")
+            if st.button("⚡ Generate Summary", use_container_width=True, key="generate_summary_btn"):
+                with st.spinner("🧠 Analyzing documents and generating summary..."):
+                    st.session_state.summary = generate_document_summary(st.session_state.processed_files)
+                st.rerun()
+        else:
+            st.markdown(st.session_state.summary)
+            if st.button("🔄 Regenerate Summary", use_container_width=True, key="regenerate_summary_btn"):
+                st.session_state.summary = None
+                st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
 
 
 with col2:
