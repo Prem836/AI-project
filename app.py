@@ -496,18 +496,15 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     
     st.markdown("---")
-    st.subheader("📅 Project Roadmap & Status")
     st.markdown("""
-    * **Day 1: Base UI Setup** <span class='status-badge status-completed'>Completed</span>
-    * **Day 2: Doc Loading & Text Extraction** <span class='status-badge status-completed'>Completed</span>
-    * **Day 3: Text Chunking** <span class='status-badge status-completed'>Completed</span>
-    * **Day 4: Embeddings & Vector Store** <span class='status-badge status-completed'>Completed</span>
-    * **Day 5: Gemini LLM Integration** <span class='status-badge status-completed'>Completed</span>
-    * **Day 6: Chat History Interface** <span class='status-badge status-completed'>Completed</span>
-    * **Day 7: Document Summarization** <span class='status-badge status-completed'>Completed</span>
-    * **Day 8: Styling & Custom CSS** <span class='status-badge status-completed'>Completed</span>
-    * **Day 9: End-to-End Verification** <span class='status-badge status-pending'>In Progress</span>
-    * **Day 10: Final Prep, Report & PPT** <span class='status-badge status-upcoming'>Upcoming</span>
+    <div style="background: rgba(167, 139, 250, 0.03); border: 1px solid rgba(167, 139, 250, 0.15); padding: 1.2rem; border-radius: 14px; margin-top: 1rem;">
+        <h4 style="color: #a78bfa; margin-top: 0; margin-bottom: 0.6rem; font-family: 'Outfit', sans-serif; font-size: 1rem;">💡 System Guidelines</h4>
+        <ul style="margin: 0; padding-left: 1.1rem; font-size: 0.8rem; line-height: 1.5; color: var(--text-color); opacity: 0.8;">
+            <li><strong>Verified Sources:</strong> Expand the citations tray under any assistant message to verify specific matching document passages.</li>
+            <li><strong>Full Text Search:</strong> Use the Keyword Search panel to highlight term occurrences directly in the documents.</li>
+            <li><strong>Zero Hallucinations:</strong> The chatbot relies strictly on the uploaded text. If context is missing, it will safely decline to answer.</li>
+        </ul>
+    </div>
     """, unsafe_allow_html=True)
     
     st.markdown("---")
