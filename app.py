@@ -70,6 +70,9 @@ if st.session_state.theme_mode:
             --stat-label-color: #94a3b8;
             --tech-tag-bg: rgba(167, 139, 250, 0.15);
             --tech-tag-color: #c084fc;
+            --header-bg: rgba(255, 255, 255, 0.03);
+            --header-border: rgba(255, 255, 255, 0.05);
+            --header-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
     </style>
     """
@@ -93,6 +96,9 @@ else:
             --stat-label-color: #475569;
             --tech-tag-bg: rgba(167, 139, 250, 0.1);
             --tech-tag-color: #7c3aed;
+            --header-bg: rgba(255, 255, 255, 0.7);
+            --header-border: rgba(15, 23, 42, 0.08);
+            --header-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
         }
         
         /* Light Mode Specific overrides */
@@ -102,9 +108,6 @@ else:
         }
         div[data-testid="stMarkdownContainer"] p, div[data-testid="stMarkdownContainer"] li {
             color: #0f172a !important;
-        }
-        span[data-testid="stHeader"] {
-            background-color: transparent !important;
         }
         .stMarkdown div p {
             color: #475569 !important;
@@ -129,12 +132,12 @@ st.markdown("""
     .header-container {
         text-align: center;
         padding: 2.5rem 1rem 1.5rem 1rem;
-        background: rgba(255, 255, 255, 0.03);
+        background: var(--header-bg) !important;
         border-radius: 20px;
-        border: 1px solid rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--header-border) !important;
         backdrop-filter: blur(10px);
         margin-bottom: 2rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        box-shadow: var(--header-shadow) !important;
     }
     .main-title {
         font-family: 'Outfit', 'Inter', sans-serif;
@@ -257,6 +260,49 @@ st.markdown("""
     }
     div[data-testid="stFileUploader"]:hover {
         border-color: rgba(167, 139, 250, 0.6) !important;
+    }
+    div[data-testid="stFileUploader"] > section, [data-testid="stFileDropzone"] {
+        background-color: transparent !important;
+        color: var(--text-color) !important;
+    }
+    div[data-testid="stFileUploader"] button {
+        background: var(--tech-tag-bg) !important;
+        color: var(--tech-tag-color) !important;
+        border: 1px solid var(--tech-tag-color) !important;
+    }
+    [data-testid="stUploadedFile"] {
+        background-color: var(--card-bg) !important;
+        border: 1px solid var(--card-border) !important;
+        color: var(--text-color) !important;
+    }
+    
+    /* Streamlit top header transparency overrides */
+    [data-testid="stHeader"], header[data-testid="stHeader"] {
+        background: transparent !important;
+        background-color: transparent !important;
+    }
+    
+    /* Premium Welcome Page card & alerts overrides */
+    .welcome-card {
+        text-align: center;
+        padding: 2.5rem;
+        background: var(--card-bg) !important;
+        border-radius: 24px;
+        border: 1px solid var(--card-border) !important;
+        margin-bottom: 2rem;
+        backdrop-filter: blur(10px);
+        box-shadow: var(--card-shadow);
+    }
+    
+    .get-started-box {
+        background: rgba(167, 139, 250, 0.05) !important;
+        border: 1px solid rgba(167, 139, 250, 0.2) !important;
+        padding: 1.2rem;
+        border-radius: 12px;
+        text-align: center;
+        margin-top: 2rem;
+        color: var(--tech-tag-color) !important;
+        font-weight: 600;
     }
     
     /* Monospace previewer field styling */
@@ -479,10 +525,10 @@ st.markdown("""
 if not st.session_state.processed_files:
     # --- LANDING DASHBOARD VIEW ---
     st.markdown("""
-    <div style="text-align: center; padding: 2.5rem; background: rgba(30, 41, 59, 0.25); border-radius: 24px; border: 1px solid rgba(148, 163, 184, 0.1); margin-bottom: 2rem; backdrop-filter: blur(10px);">
+    <div class="welcome-card">
         <p style="font-size: 5.5rem; margin-bottom: 0.5rem; animation: pulse 2s infinite;">🧠</p>
         <h1 style="font-family: 'Outfit', sans-serif; font-weight: 800; background: linear-gradient(90deg, #a78bfa 0%, #ec4899 50%, #f43f5e 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 0.5rem; letter-spacing: -0.5px;">Welcome to DocSensei</h1>
-        <p style="color: #94a3b8; font-size: 1.15rem; font-weight: 300; max-width: 650px; margin: 0 auto 1.5rem auto; line-height: 1.6;">
+        <p style="color: var(--text-color); opacity: 0.8; font-size: 1.15rem; font-weight: 300; max-width: 650px; margin: 0 auto 1.5rem auto; line-height: 1.6;">
             Unlock the hidden insights in your research papers, notes, or business files. Upload PDF or Word documents to instantly chat with them, search keywords, and generate summaries.
         </p>
     </div>
@@ -494,31 +540,31 @@ if not st.session_state.processed_files:
         st.markdown("""
         <div class="card" style="height: 100%;">
             <h3 style="color: #a78bfa; margin-top: 0; font-family: 'Outfit', sans-serif;">🤖 Context-Aware Q&A Chat</h3>
-            <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.5;">Ask questions in natural language. The assistant answers strictly based on the content of your documents with clickable source page citations to prevent hallucinations.</p>
+            <p style="color: var(--text-color); opacity: 0.85; font-size: 0.95rem; line-height: 1.5;">Ask questions in natural language. The assistant answers strictly based on the content of your documents with clickable source page citations to prevent hallucinations.</p>
         </div>
         """, unsafe_allow_html=True)
         st.markdown("""
         <div class="card" style="height: 100%;">
             <h3 style="color: #f43f5e; margin-top: 0; font-family: 'Outfit', sans-serif;">📋 AI-Powered Summarization</h3>
-            <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.5;">Generate rich, bulleted summaries of all loaded documents on-demand, including auto-suggested questions tailored specifically to the file content.</p>
+            <p style="color: var(--text-color); opacity: 0.85; font-size: 0.95rem; line-height: 1.5;">Generate rich, bulleted summaries of all loaded documents on-demand, including auto-suggested questions tailored specifically to the file content.</p>
         </div>
         """, unsafe_allow_html=True)
     with col_feat2:
         st.markdown("""
         <div class="card" style="height: 100%;">
             <h3 style="color: #ec4899; margin-top: 0; font-family: 'Outfit', sans-serif;">🔍 Highlighting Keyword Search</h3>
-            <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.5;">Perform instant keyword searches across all loaded files. Highlights matching text blocks and overlays yellow markers over key terms.</p>
+            <p style="color: var(--text-color); opacity: 0.85; font-size: 0.95rem; line-height: 1.5;">Perform instant keyword searches across all loaded files. Highlights matching text blocks and overlays yellow markers over key terms.</p>
         </div>
         """, unsafe_allow_html=True)
         st.markdown("""
         <div class="card" style="height: 100%;">
             <h3 style="color: #34d399; margin-top: 0; font-family: 'Outfit', sans-serif;">💾 Secure Local FAISS Database</h3>
-            <p style="color: #94a3b8; font-size: 0.95rem; line-height: 1.5;">Your documents are chunked and indexed locally using secure sentence embeddings from Hugging Face for privacy and speed.</p>
+            <p style="color: var(--text-color); opacity: 0.85; font-size: 0.95rem; line-height: 1.5;">Your documents are chunked and indexed locally using secure sentence embeddings from Hugging Face for privacy and speed.</p>
         </div>
         """, unsafe_allow_html=True)
         
     st.markdown("""
-    <div style="background: rgba(167, 139, 250, 0.05); border: 1px solid rgba(167, 139, 250, 0.2); padding: 1.2rem; border-radius: 12px; text-align: center; margin-top: 2rem; color: #a78bfa; font-weight: 500;">
+    <div class="get-started-box">
         👈 To get started, please drag and drop or choose PDF/DOCX files in the uploader inside the left sidebar.
     </div>
     """, unsafe_allow_html=True)
