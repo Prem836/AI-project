@@ -231,3 +231,6 @@ Thumbs.db
 
 # Local database (if you use SQLite later)
 *.db
+
+# Presentation files
+*.pptx
