@@ -5,7 +5,7 @@ from utils.splitter import split_text
 from utils.embeddings import get_embeddings_model
 from utils.vectorstore import create_vector_store
 from utils.chatbot import query_chatbot, generate_document_summary
-from utils.helpers import get_document_metrics, time_it
+from utils.helpers import get_document_metrics, time_it, sanitize_filename
 
 # Developer mode toggle. Set to True to display developer test/clear buttons.
 # Can be dynamically enabled by visiting: http://localhost:8501/?dev=true
@@ -610,7 +610,7 @@ with col1:
         # File list detail
         for name, data in st.session_state.processed_files.items():
             chunks_count = len(data.get("chunks", []))
-            st.markdown(f"<div style='margin-bottom: 0.5rem;'><span style='color: #a78bfa; font-weight: 500;'>📄 {name}</span> <span style='color: #64748b; font-size: 0.85rem;'>({data['size'] / 1024:.1f} KB) &bull; {chunks_count} chunks generated in {data['time_taken']:.2f}s</span></div>", unsafe_allow_html=True)
+            st.markdown(f"<div style='margin-bottom: 0.5rem;'><span style='color: #a78bfa; font-weight: 500;'>📄 {sanitize_filename(name)}</span> <span style='color: #64748b; font-size: 0.85rem;'>({data['size'] / 1024:.1f} KB) &bull; {chunks_count} chunks generated in {data['time_taken']:.2f}s</span></div>", unsafe_allow_html=True)
         st.markdown("</div>", unsafe_allow_html=True)
         
         # Keyword Search & Highlighting Card
@@ -637,7 +637,7 @@ with col1:
                 st.markdown(f"**Found {len(matches_found)} match(es):**")
                 st.markdown("<div style='max-height: 250px; overflow-y: auto; padding-right: 0.5rem;'>", unsafe_allow_html=True)
                 for m in matches_found[:12]:
-                    st.markdown(f"<div style='background: rgba(255,255,255,0.02); border-left: 3px solid #a78bfa; padding: 0.6rem; margin-bottom: 0.6rem; border-radius: 0 8px 8px 0; font-size: 0.85rem;'><span style='color: #a78bfa; font-weight: 500;'>📄 {m['file']}</span><br/>{m['text']}</div>", unsafe_allow_html=True)
+                    st.markdown(f"<div style='background: rgba(255,255,255,0.02); border-left: 3px solid #a78bfa; padding: 0.6rem; margin-bottom: 0.6rem; border-radius: 0 8px 8px 0; font-size: 0.85rem;'><span style='color: #a78bfa; font-weight: 500;'>📄 {sanitize_filename(m['file'])}</span><br/>{m['text']}</div>", unsafe_allow_html=True)
                 st.markdown("</div>", unsafe_allow_html=True)
                 if len(matches_found) > 12:
                     st.info(f"Showing first 12 matches of {len(matches_found)}")
@@ -713,7 +713,7 @@ with col2:
                 if msg["role"] == "assistant" and "sources" in msg and msg["sources"]:
                     md_lines.append("\n**Sources Cited:**\n")
                     for src in msg["sources"]:
-                        md_lines.append(f"- {src['file']} (Page {src['page']})\n")
+                        md_lines.append(f"- {sanitize_filename(src['file'])} (Page {src['page']})\n")
                     md_lines.append("\n")
                 md_lines.append("---\n")
             chat_md = "".join(md_lines)
@@ -778,7 +778,7 @@ with col2:
                             if "sources" in msg and msg["sources"]:
                                 with st.expander("📖 View Citations"):
                                     for idx, source in enumerate(msg["sources"]):
-                                        st.markdown(f"**[Citation {idx+1}]** {source['file']} (Page {source['page']})")
+                                        st.markdown(f"**[Citation {idx+1}]** {sanitize_filename(source['file'])} (Page {source['page']})")
                                         st.markdown(f"*\"{source['snippet']}...\"*")
                                         
         # Chat input for querying
@@ -805,7 +805,7 @@ with col2:
                 sources = []
                 for doc in res["source_documents"]:
                     sources.append({
-                        "file": os.path.basename(doc.metadata.get("source", "unknown")),
+                        "file": sanitize_filename(os.path.basename(doc.metadata.get("source", "unknown"))),
                         "page": doc.metadata.get("page", "unknown"),
                         "snippet": doc.page_content[:180].strip()
                     })

@@ -3,6 +3,8 @@ import dotenv
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.messages import HumanMessage
 
+from utils.helpers import sanitize_filename
+
 # Load environment variables in case this module is imported standalone
 dotenv.load_dotenv()
 
@@ -39,7 +41,7 @@ def query_chatbot(question: str, vector_store, chat_history=None, k: int = 4):
         # Build context string
         context_text = ""
         for idx, doc in enumerate(retrieved_docs):
-            source = os.path.basename(doc.metadata.get("source", "unknown"))
+            source = sanitize_filename(os.path.basename(doc.metadata.get("source", "unknown")))
             page = doc.metadata.get("page", "unknown")
             context_text += f"\n--- Source: {source}, Page: {page} ---\n{doc.page_content}\n"
             

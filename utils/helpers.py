@@ -42,3 +42,13 @@ def get_document_metrics(documents):
         "page_count": page_count,
         "total_chars": total_chars
     }
+
+def sanitize_filename(filename: str) -> str:
+    """
+    Removes duplicated extensions like .docx.docx or .pdf.pdf from filenames.
+    Example: 'Summer_Training_Report_WebRAG.docx.docx' -> 'Summer_Training_Report_WebRAG.docx'
+    """
+    if not filename:
+        return "unknown"
+    import re
+    return re.sub(r'(\.(docx|pdf))(?:\1)+$', r'\1', filename, flags=re.IGNORECASE)
